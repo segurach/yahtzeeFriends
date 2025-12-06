@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Alert, Animated, Easing, Dimensions } from 'react-native';
 import io from 'socket.io-client';
 import * as Haptics from 'expo-haptics';
-import { Audio } from 'expo-av';
+import { useAudioPlayer } from 'expo-audio';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
 // Components
@@ -47,27 +47,26 @@ export default function App() {
   const diceAnimValues = useRef([0, 0, 0, 0, 0].map(() => new Animated.Value(0))).current;
   const confettiRef = useRef(null);
 
+  // Audio Players
+  const rollPlayer = useAudioPlayer(require('./assets/dice-roll.mp3'));
+  const scorePlayer = useAudioPlayer(require('./assets/score.wav'));
+
   // Sound & Haptics Helper
-  const playSound = async (type) => {
+  const playSound = (type) => {
     try {
       // Haptics
       if (type === 'roll') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        rollPlayer.play();
       } else if (type === 'select') {
         Haptics.selectionAsync();
       } else if (type === 'score') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        scorePlayer.play();
       } else if (type === 'game_over') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        scorePlayer.play();
       }
-
-      // Audio
-      const { sound } = await Audio.Sound.createAsync(
-        type === 'roll' ? require('./assets/dice-roll.mp3') :
-          type === 'score' ? require('./assets/score.wav') :
-            type === 'game_over' ? require('./assets/score.wav') : null
-      );
-      await sound.playAsync();
     } catch (error) {
       console.log('Error playing sound/haptics:', error);
     }
