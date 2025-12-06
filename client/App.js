@@ -4,52 +4,12 @@ import io from 'socket.io-client';
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import Die from './components/Die';
+import ScoreRow from './components/ScoreRow';
 
 // REPLACE WITH YOUR LOCAL IP ADDRESS (e.g., 'http://192.168.1.15:3000')
 // 'localhost' only works on iOS Simulator, NOT on Android Emulator or physical devices.
 const SERVER_URL = 'http://192.168.1.20:3000';
-
-// Visual Die Component
-const Die = ({ value, isKept, isEmpty, onPress, disabled, animStyle }) => {
-  // ... (Die component remains the same)
-  const getDots = (v) => {
-    switch (v) {
-      case 1: return [<View key="c" style={styles.dotCenter} />];
-      case 2: return [<View key="tl" style={styles.dotTL} />, <View key="br" style={styles.dotBR} />];
-      case 3: return [<View key="tl" style={styles.dotTL} />, <View key="c" style={styles.dotCenter} />, <View key="br" style={styles.dotBR} />];
-      case 4: return [<View key="tl" style={styles.dotTL} />, <View key="tr" style={styles.dotTR} />, <View key="bl" style={styles.dotBL} />, <View key="br" style={styles.dotBR} />];
-      case 5: return [<View key="tl" style={styles.dotTL} />, <View key="tr" style={styles.dotTR} />, <View key="c" style={styles.dotCenter} />, <View key="bl" style={styles.dotBL} />, <View key="br" style={styles.dotBR} />];
-      case 6: return [
-        <View key="tl" style={styles.dotTL} />, <View key="tr" style={styles.dotTR} />,
-        <View key="ml" style={styles.dotML} />, <View key="mr" style={styles.dotMR} />,
-        <View key="bl" style={styles.dotBL} />, <View key="br" style={styles.dotBR} />
-      ];
-      default: return [];
-    }
-  };
-
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled}
-    >
-      <Animated.View style={[
-        styles.die,
-        isKept && styles.dieKept,
-        isEmpty && styles.dieEmpty,
-        animStyle
-      ]}>
-        {isEmpty ? (
-          <Text style={styles.dieText}>?</Text>
-        ) : (
-          <View style={styles.dieInner}>
-            {getDots(value)}
-          </View>
-        )}
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
 
 export default function App() {
   const [socket, setSocket] = useState(null);
@@ -346,26 +306,24 @@ export default function App() {
           const previewScore = showPreview ? calculateScore(cat, dice) : null;
 
           return (
-            <TouchableOpacity
+            <ScoreRow
               key={cat}
-              style={[
-                styles.scoreRow,
-                isFilled && styles.scoreRowFilled
-              ]}
+              label={cat.toUpperCase().replace(/_/g, ' ')}
+              score={myScorecard[cat]}
+              previewScore={previewScore}
+              isFilled={isFilled}
               onPress={() => isMyTurn && !isFilled && submitScore(cat)}
               disabled={!isMyTurn || isFilled || rollsLeft === 3}
-            >
-              <Text style={styles.scoreLabel}>{cat.toUpperCase().replace(/_/g, ' ')}</Text>
-              <Text style={isFilled ? styles.scoreValue : styles.scorePreview}>
-                {isFilled ? myScorecard[cat] : (showPreview ? previewScore : '-')}
-              </Text>
-            </TouchableOpacity>
+            />
           );
         })}
-        <View style={[styles.scoreRow, styles.totalRow]}>
-          <Text style={[styles.scoreLabel, { fontWeight: 'bold', fontSize: 20 }]}>TOTAL</Text>
-          <Text style={[styles.scoreValue, { fontWeight: 'bold', fontSize: 24 }]}>{myPlayer?.score || 0}</Text>
-        </View>
+        <ScoreRow
+          label="TOTAL"
+          score={myPlayer?.score || 0}
+          isFilled={true}
+          isTotal={true}
+          disabled={true}
+        />
       </View>
     </ScrollView>
   );
@@ -564,51 +522,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 10,
   },
-  die: {
-    width: 56, // Increased from 50
-    height: 56, // Increased from 50
-    backgroundColor: 'white',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  dieInner: {
-    width: '100%',
-    height: '100%',
-    position: 'relative',
-  },
-  dieKept: {
-    backgroundColor: '#b2dfdb', // Light Teal
-    borderColor: '#00bfa5', // Teal
-    borderWidth: 3,
-    transform: [{ scale: 0.95 }], // Slight shrink effect
-  },
-  dieEmpty: {
-    backgroundColor: '#cfd8dc', // Blue Grey
-    borderColor: '#90a4ae',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dieText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#757575',
-  },
-  // Dots (Adjusted for 56x56 die)
-  dotCenter: { position: 'absolute', top: 23, left: 23, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotTL: { position: 'absolute', top: 7, left: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotTR: { position: 'absolute', top: 7, right: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotML: { position: 'absolute', top: 23, left: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotMR: { position: 'absolute', top: 23, right: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotBL: { position: 'absolute', bottom: 7, left: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotBR: { position: 'absolute', bottom: 7, right: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
   // Scorecard
   scorecard: {
     flexDirection: 'row',
@@ -618,46 +531,5 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)', // Glassmorphism effect
     padding: 10,
     borderRadius: 10,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10, // Increased from 8
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    width: '48%',
-    marginBottom: 10, // Increased from 6
-    elevation: 2,
-  },
-  scoreRowFilled: {
-    backgroundColor: '#e0e0e0',
-    opacity: 0.8,
-  },
-  totalRow: {
-    width: '100%',
-    backgroundColor: '#ffeb3b', // Yellow for total
-    marginTop: 15, // Increased from 10
-    paddingVertical: 15, // Added padding
-    paddingHorizontal: 10,
-    borderWidth: 2, // Added border
-    borderColor: '#fbc02d', // Darker yellow border
-    elevation: 6, // Increased elevation
-  },
-  scoreLabel: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#333',
-    flex: 1,
-  },
-  scoreValue: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#1a237e',
-  },
-  scorePreview: {
-    fontSize: 15,
-    color: '#9e9e9e', // Grey for preview
-    fontStyle: 'italic',
   },
 });
