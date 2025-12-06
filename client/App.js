@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, TextInput, Button, Alert, TouchableOpacity, ScrollView, Animated, Easing } from 'react-native';
 import io from 'socket.io-client';
+import * as Haptics from 'expo-haptics';
+import { Audio } from 'expo-av';
 
 // REPLACE WITH YOUR LOCAL IP ADDRESS (e.g., 'http://192.168.1.15:3000')
 // 'localhost' only works on iOS Simulator, NOT on Android Emulator or physical devices.
@@ -8,6 +10,7 @@ const SERVER_URL = 'http://192.168.1.20:3000';
 
 // Visual Die Component
 const Die = ({ value, isKept, isEmpty, onPress, disabled, animStyle }) => {
+  // ... (Die component remains the same)
   const getDots = (v) => {
     switch (v) {
       case 1: return [<View key="c" style={styles.dotCenter} />];
@@ -67,7 +70,34 @@ export default function App() {
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const diceAnimValues = useRef(dice.map(() => new Animated.Value(0))).current;
 
+  // Sound & Haptics Helper
+  const playSound = async (type) => {
+    try {
+      // Haptics
+      if (type === 'roll') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      } else if (type === 'select') {
+        Haptics.selectionAsync();
+      } else if (type === 'score') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else if (type === 'game_over') {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+
+      // Audio
+      const { sound } = await Audio.Sound.createAsync(
+        type === 'roll' ? require('./assets/dice-roll.mp3') :
+          type === 'score' ? require('./assets/score.wav') :
+            type === 'game_over' ? require('./assets/score.wav') : null
+      );
+      await sound.playAsync();
+    } catch (error) {
+      console.log('Error playing sound/haptics:', error);
+    }
+  };
+
   const runDiceAnimation = (indicesToSkip = []) => {
+    // ... (animation logic)
     const animations = diceAnimValues.map((animValue, index) => {
       if (!indicesToSkip.includes(index)) {
         animValue.setValue(0);
@@ -136,6 +166,7 @@ export default function App() {
     newSocket.on('game_over', ({ players, winner }) => {
       setPlayers(players);
       setGameState('finished');
+      playSound('game_over');
       Alert.alert(
         "GAME OVER! 🏆",
         `Winner: ${winner.name} with ${winner.score} points!`,
@@ -175,6 +206,7 @@ export default function App() {
 
   const toggleDie = (index) => {
     if (dice[index] === 0) return; // Can't select empty die
+    playSound('select');
     let newKept;
     if (keptIndices.includes(index)) {
       newKept = keptIndices.filter(i => i !== index);
@@ -186,11 +218,13 @@ export default function App() {
   };
 
   const rollDice = () => {
+    playSound('roll');
     socket.emit('roll_dice', { roomCode: currentRoom, keptIndices });
   };
 
   // Helper to calculate score locally for preview
   const calculateScore = (category, currentDice) => {
+    // ... (score calculation)
     const counts = {};
     currentDice.forEach(d => counts[d] = (counts[d] || 0) + 1);
     const sum = currentDice.reduce((a, b) => a + b, 0);
@@ -240,7 +274,10 @@ export default function App() {
         { text: "Annuler", style: "cancel" },
         {
           text: "Valider",
-          onPress: () => socket.emit('submit_score', { roomCode: currentRoom, category })
+          onPress: () => {
+            playSound('score');
+            socket.emit('submit_score', { roomCode: currentRoom, category });
+          }
         }
       ]
     );
