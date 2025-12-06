@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, Alert, TouchableOpacity, ScrollView, Animated, Easing } from 'react-native';
+import { StyleSheet, Text, View, TextInput, Button, Alert, TouchableOpacity, ScrollView, Animated, Easing, Dimensions } from 'react-native';
 import io from 'socket.io-client';
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 // REPLACE WITH YOUR LOCAL IP ADDRESS (e.g., 'http://192.168.1.15:3000')
 // 'localhost' only works on iOS Simulator, NOT on Android Emulator or physical devices.
@@ -69,6 +70,7 @@ export default function App() {
   // Animation values
   const shakeAnim = useRef(new Animated.Value(0)).current;
   const diceAnimValues = useRef(dice.map(() => new Animated.Value(0))).current;
+  const confettiRef = useRef(null);
 
   // Sound & Haptics Helper
   const playSound = async (type) => {
@@ -167,11 +169,8 @@ export default function App() {
       setPlayers(players);
       setGameState('finished');
       playSound('game_over');
-      Alert.alert(
-        "GAME OVER! 🏆",
-        `Winner: ${winner.name} with ${winner.score} points!`,
-        [{ text: "OK" }]
-      );
+      if (confettiRef.current) confettiRef.current.start();
+      // Removed Alert to let user see the confetti and UI
     });
 
     newSocket.on('error', (msg) => {
@@ -276,6 +275,9 @@ export default function App() {
           text: "Valider",
           onPress: () => {
             playSound('score');
+            if (category === 'yahtzee' && potentialScore === 50) {
+              if (confettiRef.current) confettiRef.current.start();
+            }
             socket.emit('submit_score', { roomCode: currentRoom, category });
           }
         }
@@ -338,22 +340,28 @@ export default function App() {
       <View style={styles.separator} />
       <Text style={styles.subtitle}>Scorecard</Text>
       <View style={styles.scorecard}>
-        {CATEGORIES.map(cat => (
-          <TouchableOpacity
-            key={cat}
-            style={[
-              styles.scoreRow,
-              myScorecard[cat] !== undefined && styles.scoreRowFilled
-            ]}
-            onPress={() => isMyTurn && myScorecard[cat] === undefined && submitScore(cat)}
-            disabled={!isMyTurn || myScorecard[cat] !== undefined || rollsLeft === 3}
-          >
-            <Text style={styles.scoreLabel}>{cat.toUpperCase().replace(/_/g, ' ')}</Text>
-            <Text style={styles.scoreValue}>
-              {myScorecard[cat] !== undefined ? myScorecard[cat] : '-'}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {CATEGORIES.map(cat => {
+          const isFilled = myScorecard[cat] !== undefined;
+          const showPreview = isMyTurn && !isFilled && rollsLeft < 3;
+          const previewScore = showPreview ? calculateScore(cat, dice) : null;
+
+          return (
+            <TouchableOpacity
+              key={cat}
+              style={[
+                styles.scoreRow,
+                isFilled && styles.scoreRowFilled
+              ]}
+              onPress={() => isMyTurn && !isFilled && submitScore(cat)}
+              disabled={!isMyTurn || isFilled || rollsLeft === 3}
+            >
+              <Text style={styles.scoreLabel}>{cat.toUpperCase().replace(/_/g, ' ')}</Text>
+              <Text style={isFilled ? styles.scoreValue : styles.scorePreview}>
+                {isFilled ? myScorecard[cat] : (showPreview ? previewScore : '-')}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
         <View style={[styles.scoreRow, styles.totalRow]}>
           <Text style={[styles.scoreLabel, { fontWeight: 'bold', fontSize: 20 }]}>TOTAL</Text>
           <Text style={[styles.scoreValue, { fontWeight: 'bold', fontSize: 24 }]}>{myPlayer?.score || 0}</Text>
@@ -436,6 +444,16 @@ export default function App() {
       {gameState === 'lobby' && renderLobby()}
       {gameState === 'playing' && renderGame()}
       {gameState === 'finished' && renderGameOver()}
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, pointerEvents: 'none' }}>
+        <ConfettiCannon
+          count={200}
+          origin={{ x: Dimensions.get('window').width / 2, y: -10 }}
+          autoStart={false}
+          ref={confettiRef}
+          fadeOut={true}
+          fallSpeed={3000}
+        />
+      </View>
     </View>
   );
 }
@@ -636,5 +654,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     color: '#1a237e',
+  },
+  scorePreview: {
+    fontSize: 15,
+    color: '#9e9e9e', // Grey for preview
+    fontStyle: 'italic',
   },
 });
