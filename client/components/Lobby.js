@@ -1,9 +1,13 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { themes, themeKeys } from '../utils/themes';
 
 export default function Lobby({
     language,
     setLanguage,
+    currentTheme,
+    setCurrentTheme,
+    theme,
     t,
     isConnected,
     currentRoom,
@@ -16,6 +20,13 @@ export default function Lobby({
     startGame,
     players
 }) {
+    const themeNames = {
+        darkBlue: 'themeDarkBlue',
+        darkPurple: 'themePurple',
+        forestGreen: 'themeGreen',
+        sunsetOrange: 'themeSunset',
+    };
+
     return (
         <View style={styles.centerContent}>
             <TouchableOpacity
@@ -24,6 +35,24 @@ export default function Lobby({
             >
                 <Text style={styles.langButtonText}>{language === 'fr' ? '🇬🇧 EN' : '🇫🇷 FR'}</Text>
             </TouchableOpacity>
+
+            <View style={styles.themeSelector}>
+                {themeKeys.map((themeKey) => (
+                    <TouchableOpacity
+                        key={themeKey}
+                        style={[
+                            styles.themeCircle,
+                            { backgroundColor: themes[themeKey].primary },
+                            currentTheme === themeKey && styles.selectedTheme,
+                        ]}
+                        onPress={() => setCurrentTheme(themeKey)}
+                    >
+                        {currentTheme === themeKey && (
+                            <Text style={styles.checkmark}>✓</Text>
+                        )}
+                    </TouchableOpacity>
+                ))}
+            </View>
 
             <Text style={styles.title}>{t('title')}</Text>
             <Text style={{ color: isConnected ? '#4caf50' : '#f44336', marginBottom: 20, fontWeight: 'bold' }}>
@@ -39,7 +68,7 @@ export default function Lobby({
                         value={playerName}
                         onChangeText={setPlayerName}
                     />
-                    <TouchableOpacity style={styles.primaryButton} onPress={createRoom}>
+                    <TouchableOpacity style={[styles.primaryButton, { backgroundColor: theme.accent }]} onPress={createRoom}>
                         <Text style={styles.buttonText}>{t('createRoom')}</Text>
                     </TouchableOpacity>
 
@@ -53,19 +82,19 @@ export default function Lobby({
                         onChangeText={setRoomCode}
                         autoCapitalize="characters"
                     />
-                    <TouchableOpacity style={styles.secondaryButton} onPress={joinRoom}>
+                    <TouchableOpacity style={[styles.secondaryButton, { backgroundColor: theme.secondary }]} onPress={joinRoom}>
                         <Text style={styles.buttonText}>{t('joinRoom')}</Text>
                     </TouchableOpacity>
                 </View>
             ) : (
                 <View style={{ width: '100%', alignItems: 'center' }}>
-                    <Text style={styles.roomCode}>{t('room')}: {currentRoom}</Text>
+                    <Text style={[styles.roomCode, { color: theme.accentLight }]}>{t('room')}: {currentRoom}</Text>
                     <Text style={styles.subtitle}>{t('players')}</Text>
                     {players.map((p, i) => (
                         <Text key={i} style={styles.player}>{p.name}</Text>
                     ))}
                     <View style={styles.separator} />
-                    <TouchableOpacity style={styles.primaryButton} onPress={startGame}>
+                    <TouchableOpacity style={[styles.primaryButton, { backgroundColor: theme.accent }]} onPress={startGame}>
                         <Text style={styles.buttonText}>{t('startGame')}</Text>
                     </TouchableOpacity>
                 </View>
@@ -152,6 +181,31 @@ const styles = StyleSheet.create({
     },
     langButtonText: {
         color: '#fff',
+        fontWeight: 'bold',
+    },
+    themeSelector: {
+        position: 'absolute',
+        top: 40,
+        left: 20,
+        flexDirection: 'row',
+        gap: 10,
+    },
+    themeCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        borderWidth: 2,
+        borderColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    selectedTheme: {
+        borderColor: '#fff',
+        borderWidth: 3,
+    },
+    checkmark: {
+        color: '#fff',
+        fontSize: 20,
         fontWeight: 'bold',
     },
 });

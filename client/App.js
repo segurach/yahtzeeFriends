@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Alert, Animated, Easing, Dimensions } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import io from 'socket.io-client';
 import * as Haptics from 'expo-haptics';
 import { useAudioPlayer } from 'expo-audio';
@@ -13,6 +14,7 @@ import GameOver from './components/GameOver';
 // Logic & Utils
 import { translations } from './translations';
 import { calculateScore } from './utils/gameLogic';
+import { themes } from './utils/themes';
 
 // REPLACE WITH YOUR LOCAL IP ADDRESS (e.g., 'http://192.168.1.15:3000')
 // 'localhost' only works on iOS Simulator, NOT on Android Emulator or physical devices.
@@ -42,6 +44,10 @@ export default function App() {
   // Language state and translation function
   const [language, setLanguage] = useState('fr'); // Default to French
   const t = (key) => translations[language][key];
+
+  // Theme state
+  const [currentTheme, setCurrentTheme] = useState('darkBlue');
+  const theme = themes[currentTheme];
 
   // Animation values
   const diceAnimValues = useRef([0, 0, 0, 0, 0].map(() => new Animated.Value(0))).current;
@@ -87,6 +93,33 @@ export default function App() {
 
     Animated.parallel(animations).start();
   };
+
+  // Load theme preference on mount
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        const savedTheme = await AsyncStorage.getItem('theme');
+        if (savedTheme && themes[savedTheme]) {
+          setCurrentTheme(savedTheme);
+        }
+      } catch (error) {
+        console.log('Error loading theme:', error);
+      }
+    };
+    loadTheme();
+  }, []);
+
+  // Save theme preference when it changes
+  useEffect(() => {
+    const saveTheme = async () => {
+      try {
+        await AsyncStorage.setItem('theme', currentTheme);
+      } catch (error) {
+        console.log('Error saving theme:', error);
+      }
+    };
+    saveTheme();
+  }, [currentTheme]);
 
   useEffect(() => {
     console.log('Attempting to connect to:', SERVER_URL);
@@ -218,11 +251,14 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.primary }]}>
       {gameState === 'lobby' && (
         <Lobby
           language={language}
           setLanguage={setLanguage}
+          currentTheme={currentTheme}
+          setCurrentTheme={setCurrentTheme}
+          theme={theme}
           t={t}
           isConnected={isConnected}
           currentRoom={currentRoom}
@@ -280,7 +316,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a237e', // Dark Blue
+    backgroundColor: themes.darkBlue.primary, // Will be overridden by inline style
     padding: 20,
   },
 });

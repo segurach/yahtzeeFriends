@@ -30,6 +30,10 @@ export const translations = {
         viewScorecard: "View Scorecard",
         closeScorecard: "Close",
         notFilled: "-",
+        themeDarkBlue: "Dark Blue",
+        themePurple: "Purple",
+        themeGreen: "Green",
+        themeSunset: "Sunset",
 
         // Game Over
         gameOver: "GAME OVER 🏆",
@@ -84,6 +88,10 @@ export const translations = {
         viewScorecard: "Voir la feuille",
         closeScorecard: "Fermer",
         notFilled: "-",
+        themeDarkBlue: "Bleu Foncé",
+        themePurple: "Violet",
+        themeGreen: "Vert",
+        themeSunset: "Coucher de Soleil",
 
         // Game Over
         gameOver: "PARTIE TERMINÉE 🏆",
