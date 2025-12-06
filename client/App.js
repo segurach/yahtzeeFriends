@@ -214,6 +214,10 @@ export default function App() {
     );
   };
 
+  const playAgain = () => {
+    socket.emit('start_game', currentRoom);
+  };
+
   return (
     <View style={styles.container}>
       {gameState === 'lobby' && (
@@ -256,6 +260,7 @@ export default function App() {
           t={t}
           players={players}
           resetGame={resetGame}
+          playAgain={playAgain}
         />
       )}
 

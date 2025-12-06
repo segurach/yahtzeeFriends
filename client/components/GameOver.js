@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-export default function GameOver({ t, players, resetGame }) {
+export default function GameOver({ t, players, resetGame, playAgain }) {
     return (
         <View style={styles.centerContent}>
             <Text style={styles.title}>{t('gameOver')}</Text>
@@ -16,6 +16,9 @@ export default function GameOver({ t, players, resetGame }) {
                     </View>
                 ))}
             <View style={styles.separator} />
+            <TouchableOpacity style={styles.secondaryButton} onPress={playAgain}>
+                <Text style={styles.buttonText}>{t('playAgain')}</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.primaryButton} onPress={resetGame}>
                 <Text style={styles.buttonText}>{t('backToLobby')}</Text>
             </TouchableOpacity>
@@ -54,6 +57,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 10,
         elevation: 3,
+    },
+    secondaryButton: {
+        backgroundColor: '#5c6bc0', // Lighter Blue
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginBottom: 10,
     },
     buttonText: {
         color: 'white',

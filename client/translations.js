@@ -32,6 +32,7 @@ export const translations = {
         finalScores: "Final Scores:",
         winner: "Winner: {name} with {score} points!",
         backToLobby: "Back to Lobby",
+        playAgain: "Play Again",
 
         // Categories
         ones: "Ones",
@@ -81,6 +82,7 @@ export const translations = {
         finalScores: "Scores Finaux :",
         winner: "Vainqueur : {name} avec {score} points !",
         backToLobby: "Retour au Lobby",
+        playAgain: "Rejouer",
 
         // Categories
         ones: "As",

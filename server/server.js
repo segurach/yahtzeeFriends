@@ -119,6 +119,13 @@ io.on('connection', (socket) => {
         const room = rooms.get(roomCode);
         if (room && room.players.length > 0) {
             room.gameState = 'playing';
+
+            // Reset scores for new game
+            room.players.forEach(p => {
+                p.score = 0;
+                p.scorecard = {};
+            });
+
             room.currentTurn = 0; // Index of player whose turn it is
             // Initial dice state (empty)
             room.dice = [0, 0, 0, 0, 0];
@@ -129,6 +136,9 @@ io.on('connection', (socket) => {
                 dice: room.dice,
                 rollsLeft: room.rollsLeft
             });
+            // Update players with reset scores
+            io.to(roomCode).emit('player_joined', room.players);
+
             console.log(`Game started in room ${roomCode}`);
         }
     });
