@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, TextInput, Button, Alert, TouchableOpacity, ScrollView, Animated, Easing } from 'react-native';
 import io from 'socket.io-client';
 
 // REPLACE WITH YOUR LOCAL IP ADDRESS (e.g., 'http://192.168.1.15:3000')
@@ -7,7 +7,7 @@ import io from 'socket.io-client';
 const SERVER_URL = 'http://192.168.1.20:3000';
 
 // Visual Die Component
-const Die = ({ value, isKept, isEmpty, onPress, disabled }) => {
+const Die = ({ value, isKept, isEmpty, onPress, disabled, animStyle }) => {
   const getDots = (v) => {
     switch (v) {
       case 1: return [<View key="c" style={styles.dotCenter} />];
@@ -28,19 +28,21 @@ const Die = ({ value, isKept, isEmpty, onPress, disabled }) => {
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
-      style={[
+    >
+      <Animated.View style={[
         styles.die,
         isKept && styles.dieKept,
-        isEmpty && styles.dieEmpty
-      ]}
-    >
-      {isEmpty ? (
-        <Text style={styles.dieText}>?</Text>
-      ) : (
-        <View style={styles.dieInner}>
-          {getDots(value)}
-        </View>
-      )}
+        isEmpty && styles.dieEmpty,
+        animStyle
+      ]}>
+        {isEmpty ? (
+          <Text style={styles.dieText}>?</Text>
+        ) : (
+          <View style={styles.dieInner}>
+            {getDots(value)}
+          </View>
+        )}
+      </Animated.View>
     </TouchableOpacity>
   );
 };
@@ -55,9 +57,31 @@ export default function App() {
   const [gameState, setGameState] = useState('lobby'); // lobby, playing
   const [dice, setDice] = useState([0, 0, 0, 0, 0]);
   const [keptIndices, setKeptIndices] = useState([]);
+  const keptIndicesRef = useRef([]); // Ref to access latest state in event listener
+
   const [rollsLeft, setRollsLeft] = useState(3);
   const [currentTurnId, setCurrentTurnId] = useState(null);
   const [myId, setMyId] = useState(null);
+
+  // Animation values
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const diceAnimValues = useRef(dice.map(() => new Animated.Value(0))).current;
+
+  const runDiceAnimation = (indicesToSkip = []) => {
+    const animations = diceAnimValues.map((animValue, index) => {
+      if (!indicesToSkip.includes(index)) {
+        animValue.setValue(0);
+        return Animated.sequence([
+          Animated.timing(animValue, { toValue: 1, duration: 100, easing: Easing.linear, useNativeDriver: true }),
+          Animated.timing(animValue, { toValue: -1, duration: 100, easing: Easing.linear, useNativeDriver: true }),
+          Animated.timing(animValue, { toValue: 0, duration: 100, easing: Easing.linear, useNativeDriver: true }),
+        ]);
+      }
+      return Animated.timing(animValue, { toValue: 0, duration: 0, useNativeDriver: true });
+    });
+
+    Animated.parallel(animations).start();
+  };
 
   useEffect(() => {
     console.log('Attempting to connect to:', SERVER_URL);
@@ -90,11 +114,13 @@ export default function App() {
       setDice(dice);
       setRollsLeft(rollsLeft);
       setKeptIndices([]);
+      keptIndicesRef.current = [];
     });
 
     newSocket.on('dice_updated', ({ dice, rollsLeft }) => {
       setDice(dice);
       setRollsLeft(rollsLeft);
+      runDiceAnimation(keptIndicesRef.current); // Use ref to get latest kept indices
     });
 
     newSocket.on('turn_updated', ({ currentTurn, dice, rollsLeft, players }) => {
@@ -102,7 +128,19 @@ export default function App() {
       setDice(dice);
       setRollsLeft(rollsLeft);
       setKeptIndices([]);
+      keptIndicesRef.current = [];
       setPlayers(players); // Update scores
+      // No animation here, as dice are reset for new turn
+    });
+
+    newSocket.on('game_over', ({ players, winner }) => {
+      setPlayers(players);
+      setGameState('finished');
+      Alert.alert(
+        "GAME OVER! 🏆",
+        `Winner: ${winner.name} with ${winner.score} points!`,
+        [{ text: "OK" }]
+      );
     });
 
     newSocket.on('error', (msg) => {
@@ -110,7 +148,7 @@ export default function App() {
     });
 
     return () => newSocket.disconnect();
-  }, [playerName]); // Re-run if playerName changes (though mostly for initial setup)
+  }, [playerName, diceAnimValues]);
 
   const createRoom = () => {
     if (!playerName) return Alert.alert('Error', 'Enter name first');
@@ -127,14 +165,24 @@ export default function App() {
     socket.emit('start_game', currentRoom);
   };
 
+  const resetGame = () => {
+    setGameState('lobby');
+    setCurrentRoom(null);
+    setPlayers([]);
+    setRoomCode('');
+    // Note: In a real app, we'd probably want a 'play again' feature in the same room
+  };
+
   const toggleDie = (index) => {
-    // if (rollsLeft === 0) return; // Allow selection even after last roll for visual clarity
     if (dice[index] === 0) return; // Can't select empty die
+    let newKept;
     if (keptIndices.includes(index)) {
-      setKeptIndices(keptIndices.filter(i => i !== index));
+      newKept = keptIndices.filter(i => i !== index);
     } else {
-      setKeptIndices([...keptIndices, index]);
+      newKept = [...keptIndices, index];
     }
+    setKeptIndices(newKept);
+    keptIndicesRef.current = newKept; // Update ref
   };
 
   const rollDice = () => {
@@ -216,16 +264,24 @@ export default function App() {
       </Text>
 
       <View style={styles.diceContainer}>
-        {dice.map((value, index) => (
-          <Die
-            key={index}
-            value={value}
-            isKept={keptIndices.includes(index)}
-            isEmpty={value === 0}
-            onPress={() => isMyTurn && toggleDie(index)}
-            disabled={value === 0}
-          />
-        ))}
+        {dice.map((value, index) => {
+          const rotation = diceAnimValues[index].interpolate({
+            inputRange: [-1, 0, 1],
+            outputRange: ['-15deg', '0deg', '15deg']
+          });
+
+          return (
+            <Die
+              key={index}
+              value={value}
+              isKept={keptIndices.includes(index)}
+              isEmpty={value === 0}
+              onPress={() => isMyTurn && toggleDie(index)}
+              disabled={value === 0}
+              animStyle={{ transform: [{ rotate: rotation }] }}
+            />
+          );
+        })}
       </View>
 
       <Text style={styles.info}>Rolls left: {rollsLeft}</Text>
@@ -312,9 +368,31 @@ export default function App() {
     </View>
   );
 
+  const renderGameOver = () => (
+    <View style={styles.centerContent}>
+      <Text style={styles.title}>GAME OVER 🏆</Text>
+      <Text style={styles.subtitle}>Final Scores:</Text>
+      {players
+        .sort((a, b) => b.score - a.score)
+        .map((p, i) => (
+          <View key={i} style={{ marginBottom: 10, alignItems: 'center' }}>
+            <Text style={{ fontSize: 24, color: i === 0 ? '#ffeb3b' : '#fff', fontWeight: 'bold' }}>
+              {i === 0 ? '👑 ' : ''}{p.name}: {p.score}
+            </Text>
+          </View>
+        ))}
+      <View style={styles.separator} />
+      <TouchableOpacity style={styles.primaryButton} onPress={resetGame}>
+        <Text style={styles.buttonText}>Back to Lobby</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      {gameState === 'lobby' ? renderLobby() : renderGame()}
+      {gameState === 'lobby' && renderLobby()}
+      {gameState === 'playing' && renderGame()}
+      {gameState === 'finished' && renderGameOver()}
     </View>
   );
 }
@@ -422,10 +500,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   die: {
-    width: 50,
-    height: 50,
+    width: 56, // Increased from 50
+    height: 56, // Increased from 50
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#ccc',
     justifyContent: 'center',
@@ -454,18 +532,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dieText: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#757575',
   },
-  // Dots (Adjusted for 50x50 die)
-  dotCenter: { position: 'absolute', top: 19, left: 19, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotTL: { position: 'absolute', top: 6, left: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotTR: { position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotML: { position: 'absolute', top: 19, left: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotMR: { position: 'absolute', top: 19, right: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotBL: { position: 'absolute', bottom: 6, left: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
-  dotBR: { position: 'absolute', bottom: 6, right: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
+  // Dots (Adjusted for 56x56 die)
+  dotCenter: { position: 'absolute', top: 23, left: 23, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
+  dotTL: { position: 'absolute', top: 7, left: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
+  dotTR: { position: 'absolute', top: 7, right: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
+  dotML: { position: 'absolute', top: 23, left: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
+  dotMR: { position: 'absolute', top: 23, right: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
+  dotBL: { position: 'absolute', bottom: 7, left: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
+  dotBR: { position: 'absolute', bottom: 7, right: 7, width: 10, height: 10, borderRadius: 5, backgroundColor: 'black' },
   // Scorecard
   scorecard: {
     flexDirection: 'row',

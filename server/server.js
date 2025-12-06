@@ -177,18 +177,38 @@ io.on('connection', (socket) => {
             currentPlayer.scorecard[category] = score;
             currentPlayer.score += score;
 
-            // Next turn
-            room.currentTurn = (room.currentTurn + 1) % room.players.length;
-            // Reset dice for next player
-            room.dice = [0, 0, 0, 0, 0];
-            room.rollsLeft = 3;
+            // Check for Game Over
+            // Game is over if ALL players have filled ALL 13 categories
+            const CATEGORIES_COUNT = 13;
+            const allPlayersFinished = room.players.every(p =>
+                p.scorecard && Object.keys(p.scorecard).length === CATEGORIES_COUNT
+            );
 
-            io.to(roomCode).emit('turn_updated', {
-                currentTurn: room.players[room.currentTurn].id,
-                dice: room.dice,
-                rollsLeft: room.rollsLeft,
-                players: room.players // Send full player data to update scores
-            });
+            if (allPlayersFinished) {
+                room.gameState = 'finished';
+                // Determine winner
+                const winner = room.players.reduce((prev, current) =>
+                    (prev.score > current.score) ? prev : current
+                );
+
+                io.to(roomCode).emit('game_over', {
+                    players: room.players,
+                    winner: winner
+                });
+            } else {
+                // Next turn
+                room.currentTurn = (room.currentTurn + 1) % room.players.length;
+                // Reset dice for next player
+                room.dice = [0, 0, 0, 0, 0];
+                room.rollsLeft = 3;
+
+                io.to(roomCode).emit('turn_updated', {
+                    currentTurn: room.players[room.currentTurn].id,
+                    dice: room.dice,
+                    rollsLeft: room.rollsLeft,
+                    players: room.players // Send full player data to update scores
+                });
+            }
         }
     });
 
