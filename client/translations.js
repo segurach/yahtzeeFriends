@@ -26,6 +26,10 @@ export const translations = {
         confirmScore: "Confirm Score",
         scorePointsFor: "Score {score} points for {category}?",
         cancel: "Cancel",
+        leaderboard: "Leaderboard",
+        viewScorecard: "View Scorecard",
+        closeScorecard: "Close",
+        notFilled: "-",
 
         // Game Over
         gameOver: "GAME OVER 🏆",
@@ -76,6 +80,10 @@ export const translations = {
         confirmScore: "Confirmer le score",
         scorePointsFor: "Marquer {score} points pour {category} ?",
         cancel: "Annuler",
+        leaderboard: "Classement",
+        viewScorecard: "Voir la feuille",
+        closeScorecard: "Fermer",
+        notFilled: "-",
 
         // Game Over
         gameOver: "PARTIE TERMINÉE 🏆",

@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Animated } from 'react-native';
 import Die from './Die';
 import ScoreRow from './ScoreRow';
+import Leaderboard from './Leaderboard';
+import PlayerScorecard from './PlayerScorecard';
 import { calculateScore } from '../utils/gameLogic';
 
 export default function Game({
@@ -18,6 +20,9 @@ export default function Game({
     rollDice,
     submitScore
 }) {
+    const [selectedPlayer, setSelectedPlayer] = useState(null);
+    const [scorecardVisible, setScorecardVisible] = useState(false);
+
     const isMyTurn = currentTurnId === myId;
     const myPlayer = players.find(p => p.id === myId);
     const myScorecard = myPlayer?.scorecard || {};
@@ -28,9 +33,28 @@ export default function Game({
         'small_straight', 'large_straight', 'chance', 'yahtzee'
     ];
 
+    const handlePlayerPress = (player) => {
+        setSelectedPlayer(player);
+        setScorecardVisible(true);
+    };
+
+    const handleCloseScorecard = () => {
+        setScorecardVisible(false);
+        setSelectedPlayer(null);
+    };
+
     return (
         <ScrollView contentContainerStyle={styles.scrollContent}>
             <Text style={styles.title}>{t('room')}: {currentRoom}</Text>
+
+            <Leaderboard
+                players={players}
+                currentTurnId={currentTurnId}
+                myId={myId}
+                onPlayerPress={handlePlayerPress}
+                t={t}
+            />
+
             <Text style={styles.subtitle}>
                 {isMyTurn ? t('itsYourTurn') : t('waitingForPlayer').replace('{player}', players.find(p => p.id === currentTurnId)?.name || 'player')}
             </Text>
@@ -98,6 +122,13 @@ export default function Game({
                     disabled={true}
                 />
             </View>
+
+            <PlayerScorecard
+                player={selectedPlayer}
+                visible={scorecardVisible}
+                onClose={handleCloseScorecard}
+                t={t}
+            />
         </ScrollView>
     );
 }
@@ -105,47 +136,47 @@ export default function Game({
 const styles = StyleSheet.create({
     scrollContent: {
         alignItems: 'center',
-        paddingBottom: 40,
+        paddingBottom: 20,
     },
     title: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#fff',
-        marginBottom: 20,
+        marginBottom: 10,
         textAlign: 'center',
     },
     subtitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#e8eaf6',
-        marginBottom: 10,
+        marginBottom: 8,
         textAlign: 'center',
     },
     info: {
-        fontSize: 16,
+        fontSize: 14,
         color: '#c5cae9',
-        marginBottom: 10,
+        marginBottom: 8,
         textAlign: 'center',
     },
     separator: {
-        height: 30,
+        height: 15,
     },
     rollButton: {
         backgroundColor: '#ff6f00',
-        paddingVertical: 12,
-        paddingHorizontal: 30,
+        paddingVertical: 10,
+        paddingHorizontal: 25,
         borderRadius: 30,
         alignSelf: 'center',
         elevation: 5,
-        marginBottom: 15,
+        marginBottom: 10,
     },
     rollButtonDisabled: {
-        backgroundColor: '#bdbdbd', // Grey
+        backgroundColor: '#bdbdbd',
         elevation: 0,
     },
     rollButtonText: {
         color: 'white',
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         letterSpacing: 1,
     },
@@ -153,16 +184,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-around',
         width: '100%',
-        marginBottom: 20,
-        marginTop: 10,
+        marginBottom: 12,
+        marginTop: 8,
     },
     scorecard: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
         width: '100%',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)', // Glassmorphism effect
-        padding: 10,
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        padding: 8,
         borderRadius: 10,
     },
 });
