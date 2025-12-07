@@ -1,24 +1,24 @@
 export const translations = {
     en: {
         // Lobby
-        title: "🎲 YAHTZEE 🎲",
-        enterName: "Enter Name",
+        title: "Dice Poker with Friends 🎲",
+        connectedToServer: "Connected to Server",
+        disconnected: "Disconnected",
+        yourName: "Your Name",
         createRoom: "Create Room",
         roomCode: "Room Code",
         joinRoom: "Join Room",
         room: "Room",
         players: "Players:",
         startGame: "Start Game",
-        validate: "Validate",
         error: "Error",
         enterNameFirst: "Enter name first",
         enterNameAndCode: "Enter name and code",
+
+        // Game
         itsYourTurn: "It's YOUR turn!",
         waitingForPlayer: "Waiting for {player}...",
         scorecard: "Scorecard",
-        connectedToServer: "● Connected to Server",
-        disconnected: "● Disconnected",
-        yourName: "Your Name",
         rollsLeft: "Rolls left",
         rollDice: "ROLL DICE 🎲",
         selectScore: "Select Score",
@@ -30,6 +30,8 @@ export const translations = {
         viewScorecard: "View Scorecard",
         closeScorecard: "Close",
         notFilled: "-",
+
+        // Themes
         themeDarkBlue: "Dark Blue",
         themePurple: "Purple",
         themeGreen: "Green",
@@ -61,28 +63,28 @@ export const translations = {
         small_straight: "Small Straight",
         large_straight: "Large Straight",
         chance: "Chance",
-        yahtzee: "Yahtzee"
+        yahtzee: "Five of a Kind"
     },
     fr: {
         // Lobby
-        title: "🎲 YAHTZEE 🎲",
-        enterName: "Votre Pseudo",
+        title: "Dice Poker entre Amis 🎲",
+        connectedToServer: "Connecté au Serveur",
+        disconnected: "Déconnecté",
+        yourName: "Votre Pseudo",
         createRoom: "Créer une Salle",
         roomCode: "Code de la Salle",
         joinRoom: "Rejoindre",
         room: "Salle",
         players: "Joueurs :",
         startGame: "Lancer la Partie",
-        validate: "Valider",
         error: "Erreur",
         enterNameFirst: "Entrez un pseudo d'abord",
         enterNameAndCode: "Entrez un pseudo et un code",
+
+        // Game
         itsYourTurn: "C'est à TOI !",
         waitingForPlayer: "En attente de {player}...",
         scorecard: "Feuille de Score",
-        connectedToServer: "● Connecté au Serveur",
-        disconnected: "● Déconnecté",
-        yourName: "Votre Pseudo",
         rollsLeft: "Lancers restants",
         rollDice: "LANCER LES DÉS 🎲",
         selectScore: "Choisir un Score",
@@ -94,6 +96,8 @@ export const translations = {
         viewScorecard: "Voir la feuille",
         closeScorecard: "Fermer",
         notFilled: "-",
+
+        // Themes
         themeDarkBlue: "Bleu Foncé",
         themePurple: "Violet",
         themeGreen: "Vert",
@@ -125,6 +129,6 @@ export const translations = {
         small_straight: "Petite Suite",
         large_straight: "Grande Suite",
         chance: "Chance",
-        yahtzee: "Yahtzee"
+        yahtzee: "Quinte"
     }
 };
