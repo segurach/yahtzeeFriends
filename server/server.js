@@ -222,6 +222,66 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('leave_game', ({ roomCode }) => {
+        const room = rooms.get(roomCode);
+        if (room) {
+            // Find the leaving player's index
+            const leavingPlayerIndex = room.players.findIndex(p => p.id === socket.id);
+
+            if (leavingPlayerIndex !== -1) {
+                const leavingPlayer = room.players[leavingPlayerIndex];
+                console.log(`Player ${leavingPlayer.name} is leaving room ${roomCode}`);
+
+                // Remove player from room
+                room.players.splice(leavingPlayerIndex, 1);
+
+                // If no players left, delete the room
+                if (room.players.length === 0) {
+                    rooms.delete(roomCode);
+                    console.log(`Room ${roomCode} deleted (no players left)`);
+                    return;
+                }
+
+                // If game is in progress, handle turn management
+                if (room.gameStarted) {
+                    // If it was the leaving player's turn, move to next player
+                    if (room.currentTurn >= leavingPlayerIndex) {
+                        room.currentTurn = room.currentTurn % room.players.length;
+                    }
+
+                    // Reset dice for current player
+                    room.dice = [0, 0, 0, 0, 0];
+                    room.rollsLeft = 3;
+
+                    // Check if only one player remains
+                    if (room.players.length === 1) {
+                        // End game, remaining player wins
+                        io.to(roomCode).emit('game_over', {
+                            players: room.players,
+                            winner: room.players[0]
+                        });
+                        room.gameStarted = false;
+                    } else {
+                        // Notify remaining players
+                        io.to(roomCode).emit('player_left', {
+                            playerName: leavingPlayer.name,
+                            players: room.players,
+                            currentTurn: room.players[room.currentTurn].id,
+                            dice: room.dice,
+                            rollsLeft: room.rollsLeft
+                        });
+                    }
+                } else {
+                    // Game not started, just update player list
+                    io.to(roomCode).emit('player_left', {
+                        playerName: leavingPlayer.name,
+                        players: room.players
+                    });
+                }
+            }
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
         // TODO: Handle player disconnect (remove from room, etc.)

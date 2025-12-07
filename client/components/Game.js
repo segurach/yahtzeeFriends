@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Animated, Alert } from 'react-native';
 import Die from './Die';
 import ScoreRow from './ScoreRow';
 import Leaderboard from './Leaderboard';
@@ -18,7 +18,8 @@ export default function Game({
     keptIndices,
     toggleDie,
     rollDice,
-    submitScore
+    submitScore,
+    resetGame
 }) {
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [scorecardVisible, setScorecardVisible] = useState(false);
@@ -43,8 +44,34 @@ export default function Game({
         setSelectedPlayer(null);
     };
 
+    const handleQuitGame = () => {
+        Alert.alert(
+            t('quitGame'),
+            t('quitGameConfirm'),
+            [
+                { text: t('cancel'), style: 'cancel' },
+                {
+                    text: t('quit'),
+                    style: 'destructive',
+                    onPress: resetGame
+                }
+            ]
+        );
+    };
+
     return (
         <ScrollView contentContainerStyle={styles.scrollContent}>
+            <TouchableOpacity
+                style={styles.quitButton}
+                onPress={handleQuitGame}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={t('quit')}
+                accessibilityHint="Quits the game and returns to lobby"
+            >
+                <Text style={styles.quitButtonText}>✕ {t('quit')}</Text>
+            </TouchableOpacity>
+
             <Text
                 style={styles.title}
                 accessible={true}
@@ -224,5 +251,20 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
         padding: 8,
         borderRadius: 10,
+    },
+    quitButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'rgba(244, 67, 54, 0.9)',
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        zIndex: 1000,
+    },
+    quitButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
     },
 });

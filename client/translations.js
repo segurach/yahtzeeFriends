@@ -36,6 +36,11 @@ export const translations = {
         themeSunset: "Sunset",
         themeHighContrast: "High Contrast",
 
+        // Quit Game
+        quit: "Quit",
+        quitGame: "Quit Game?",
+        quitGameConfirm: "Are you sure you want to quit the game and return to the lobby?",
+
         // Game Over
         gameOver: "GAME OVER 🏆",
         finalScores: "Final Scores:",
@@ -94,6 +99,11 @@ export const translations = {
         themeGreen: "Vert",
         themeSunset: "Coucher de Soleil",
         themeHighContrast: "Contraste Élevé",
+
+        // Quit Game
+        quit: "Quitter",
+        quitGame: "Quitter la Partie ?",
+        quitGameConfirm: "Êtes-vous sûr de vouloir quitter la partie et retourner au lobby ?",
 
         // Game Over
         gameOver: "PARTIE TERMINÉE 🏆",

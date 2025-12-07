@@ -199,6 +199,20 @@ export default function App() {
       if (confettiRef.current) confettiRef.current.start();
     });
 
+    newSocket.on('player_left', ({ playerName, players, currentTurn, dice, rollsLeft }) => {
+      console.log(`${playerName} has left the game`);
+      setPlayers(players);
+
+      // If game is in progress, update game state
+      if (currentTurn) {
+        setCurrentTurnId(currentTurn);
+        setDice(dice);
+        setRollsLeft(rollsLeft);
+        setKeptIndices([]);
+        keptIndicesRef.current = [];
+      }
+    });
+
     newSocket.on('error', (msg) => {
       Alert.alert(t('error'), msg);
     });
@@ -272,6 +286,11 @@ export default function App() {
     socket.emit('start_game', currentRoom);
   };
 
+  const leaveGame = () => {
+    socket.emit('leave_game', { roomCode: currentRoom });
+    resetGame(); // Then reset local state
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.primary }]}>
       {gameState === 'lobby' && (
@@ -309,6 +328,7 @@ export default function App() {
           toggleDie={toggleDie}
           rollDice={rollDice}
           submitScore={submitScore}
+          resetGame={leaveGame}
         />
       )}
 
