@@ -83,6 +83,17 @@ export default function App() {
 
       if (soundFile) {
         const { sound } = await Audio.Sound.createAsync(soundFile);
+
+        sound.setOnPlaybackStatusUpdate(async (status) => {
+          if (status.didJustFinish) {
+            try {
+              await sound.unloadAsync();
+            } catch (error) {
+              console.log('Error unloading sound:', error);
+            }
+          }
+        });
+
         await sound.playAsync();
       }
     } catch (error) {
