@@ -3,7 +3,7 @@ import { StyleSheet, View, Alert, Animated, Easing, Dimensions } from 'react-nat
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import io from 'socket.io-client';
 import * as Haptics from 'expo-haptics';
-import { useAudioPlayer } from 'expo-audio';
+import { Audio } from 'expo-av';
 import ConfettiCannon from 'react-native-confetti-cannon';
 
 // Components
@@ -39,7 +39,12 @@ export default function App() {
 
   const [rollsLeft, setRollsLeft] = useState(3);
   const [currentTurnId, setCurrentTurnId] = useState(null);
+  const currentTurnIdRef = useRef(null); // Ref to access latest turn ID in event listener
   const [myId, setMyId] = useState(null);
+
+  useEffect(() => {
+    currentTurnIdRef.current = currentTurnId;
+  }, [currentTurnId]);
 
   // Language state and translation function
   const [language, setLanguage] = useState('fr'); // Default to French
@@ -53,25 +58,32 @@ export default function App() {
   const diceAnimValues = useRef([0, 0, 0, 0, 0].map(() => new Animated.Value(0))).current;
   const confettiRef = useRef(null);
 
-  // Audio Players
-  const rollPlayer = useAudioPlayer(require('./assets/dice-roll.mp3'));
-  const scorePlayer = useAudioPlayer(require('./assets/score.wav'));
-
   // Sound & Haptics Helper
-  const playSound = (type) => {
+  const playSound = async (type) => {
     try {
       // Haptics
       if (type === 'roll') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        rollPlayer.play();
       } else if (type === 'select') {
         Haptics.selectionAsync();
       } else if (type === 'score') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        scorePlayer.play();
       } else if (type === 'game_over') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        scorePlayer.play();
+      }
+
+      // Audio - create new sound each time for reliable playback
+      let soundFile = null;
+
+      if (type === 'roll') {
+        soundFile = require('./assets/dice-roll.mp3');
+      } else if (type === 'score' || type === 'game_over') {
+        soundFile = require('./assets/score.wav');
+      }
+
+      if (soundFile) {
+        const { sound } = await Audio.Sound.createAsync(soundFile);
+        await sound.playAsync();
       }
     } catch (error) {
       console.log('Error playing sound/haptics:', error);
@@ -159,8 +171,8 @@ export default function App() {
       setDice(dice);
       setRollsLeft(rollsLeft);
 
-      // Play sound only if it's my turn
-      if (currentTurnId === newSocket.id) {
+      // Play sound only if it's my turn (using ref to get latest value)
+      if (currentTurnIdRef.current === newSocket.id) {
         playSound('roll');
       }
 
