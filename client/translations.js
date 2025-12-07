@@ -34,6 +34,7 @@ export const translations = {
         themePurple: "Purple",
         themeGreen: "Green",
         themeSunset: "Sunset",
+        themeHighContrast: "High Contrast",
 
         // Game Over
         gameOver: "GAME OVER 🏆",
@@ -92,6 +93,7 @@ export const translations = {
         themePurple: "Violet",
         themeGreen: "Vert",
         themeSunset: "Coucher de Soleil",
+        themeHighContrast: "Contraste Élevé",
 
         // Game Over
         gameOver: "PARTIE TERMINÉE 🏆",

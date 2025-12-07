@@ -25,6 +25,21 @@ export default function Lobby({
         darkPurple: 'themePurple',
         forestGreen: 'themeGreen',
         sunsetOrange: 'themeSunset',
+        highContrast: 'themeHighContrast',
+    };
+
+    // Dynamic button text color based on theme
+    // Use black text for high contrast and bright accent colors
+    const getButtonTextColor = (bgColor) => {
+        // High contrast always uses black
+        if (currentTheme === 'highContrast') return '#000000';
+
+        // For bright/yellow colors, use black text
+        const brightColors = ['#FFFF00', '#ffeb3b', '#ffd54f', '#ffa726', '#ffcc80'];
+        if (brightColors.includes(bgColor)) return '#000000';
+
+        // Default: white text
+        return '#FFFFFF';
     };
 
     return (
@@ -103,7 +118,7 @@ export default function Lobby({
                         accessibilityLabel={t('createRoom')}
                         accessibilityHint="Creates a new game room"
                     >
-                        <Text style={styles.buttonText}>{t('createRoom')}</Text>
+                        <Text style={[styles.buttonText, { color: getButtonTextColor(theme.accent) }]}>{t('createRoom')}</Text>
                     </TouchableOpacity>
 
                     <View style={styles.separator} />
@@ -127,7 +142,7 @@ export default function Lobby({
                         accessibilityLabel={t('joinRoom')}
                         accessibilityHint="Joins an existing game room"
                     >
-                        <Text style={styles.buttonText}>{t('joinRoom')}</Text>
+                        <Text style={[styles.buttonText, { color: getButtonTextColor(theme.secondary) }]}>{t('joinRoom')}</Text>
                     </TouchableOpacity>
                 </View>
             ) : (
@@ -166,7 +181,7 @@ export default function Lobby({
                         accessibilityLabel={t('startGame')}
                         accessibilityHint="Starts the game with current players"
                     >
-                        <Text style={styles.buttonText}>{t('startGame')}</Text>
+                        <Text style={[styles.buttonText, { color: getButtonTextColor(theme.accent) }]}>{t('startGame')}</Text>
                     </TouchableOpacity>
                 </View>
             )}

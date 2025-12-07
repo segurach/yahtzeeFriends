@@ -318,6 +318,7 @@ export default function App() {
           players={players}
           resetGame={resetGame}
           playAgain={playAgain}
+          currentTheme={currentTheme}
         />
       )}
 

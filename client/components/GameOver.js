@@ -1,8 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-export default function GameOver({ t, players, resetGame, playAgain }) {
+export default function GameOver({ t, players, resetGame, playAgain, currentTheme }) {
     const sortedPlayers = players.sort((a, b) => b.score - a.score);
+
+    // Dynamic button text color for high contrast
+    const buttonTextColor = currentTheme === 'highContrast' ? '#000000' : '#FFFFFF';
 
     return (
         <View style={styles.centerContent}>
@@ -41,7 +44,7 @@ export default function GameOver({ t, players, resetGame, playAgain }) {
                 accessibilityLabel={t('playAgain')}
                 accessibilityHint="Starts a new game with the same players"
             >
-                <Text style={styles.buttonText}>{t('playAgain')}</Text>
+                <Text style={[styles.buttonText, { color: buttonTextColor }]}>{t('playAgain')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
                 style={styles.primaryButton}
@@ -51,7 +54,7 @@ export default function GameOver({ t, players, resetGame, playAgain }) {
                 accessibilityLabel={t('backToLobby')}
                 accessibilityHint="Returns to the lobby"
             >
-                <Text style={styles.buttonText}>{t('backToLobby')}</Text>
+                <Text style={[styles.buttonText, { color: buttonTextColor }]}>{t('backToLobby')}</Text>
             </TouchableOpacity>
         </View>
     );
