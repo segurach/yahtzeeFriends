@@ -79,7 +79,7 @@ export default function Game({
                     accessibilityLabel={t('quit')}
                     accessibilityHint="Quits the game and returns to lobby"
                 >
-                    <Ionicons name="close-circle-outline" size={32} color="#fff" />
+                    <Ionicons name="log-out-outline" size={28} color="#fff" />
                 </TouchableOpacity>
             </View>
 
