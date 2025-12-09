@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { themes, themeKeys } from '../utils/themes';
+import PlayerGuide from './PlayerGuide';
 
 export default function Lobby({
     language,
@@ -65,9 +66,18 @@ export default function Lobby({
     };
 
     const [showSettings, setShowSettings] = useState(false);
+    const [showGuide, setShowGuide] = useState(false);
 
     return (
         <View style={styles.centerContent}>
+            {/* Help Button (Top Left) */}
+            <TouchableOpacity
+                style={styles.helpButton}
+                onPress={() => setShowGuide(true)}
+            >
+                <Ionicons name="help-circle-outline" size={30} color="#fff" />
+            </TouchableOpacity>
+
             <TouchableOpacity
                 style={styles.settingsButton}
                 onPress={() => setShowSettings(true)}
@@ -285,6 +295,13 @@ export default function Lobby({
                     </View>
                 </View>
             </Modal>
+
+            <PlayerGuide
+                visible={showGuide}
+                onClose={() => setShowGuide(false)}
+                theme={theme}
+                t={t}
+            />
         </View >
     );
 }
@@ -410,6 +427,15 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 40,
         right: 20,
+        padding: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 20,
+        zIndex: 10,
+    },
+    helpButton: {
+        position: 'absolute',
+        top: 40,
+        left: 20,
         padding: 8,
         backgroundColor: 'rgba(255,255,255,0.2)',
         borderRadius: 20,
