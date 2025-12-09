@@ -68,7 +68,7 @@ export default function PlayerGuide({ visible, onClose, theme, t }) {
                                 <ScoreRow label={t('fullHouse') || "Full House"} desc={t('descFullHouse') || "3 of one + 2 of another"} pts="25" />
                                 <ScoreRow label={t('smallStraight') || "Small Straight"} desc={t('descSmStraight') || "4 consecutive dice"} pts="30" />
                                 <ScoreRow label={t('largeStraight') || "Large Straight"} desc={t('descLgStraight') || "5 consecutive dice"} pts="40" />
-                                <ScoreRow label={t('yahtzee') || "Yahtzee"} desc={t('descYahtzee') || "5 same dice"} pts="50" />
+                                <ScoreRow label={t('yahtzee')} desc={t('descYahtzee') || "5 same dice"} pts="50" />
                                 <ScoreRow label={t('chance') || "Chance"} desc={t('descChance') || "Any combination"} pts="Sum of all" />
                             </View>
                         )}
@@ -82,7 +82,7 @@ export default function PlayerGuide({ visible, onClose, theme, t }) {
                                     <XPRow label={t('participation') || "Participation"} xp="+50 XP" emoji="🎮" />
                                     <XPRow label={t('victory') || "Victory"} xp="+100 XP" emoji="🏆" />
                                     <XPRow label={t('highScore') || "Score > 200"} xp="+50 XP" emoji="🎯" />
-                                    <XPRow label="Yahtzee" xp="+50 XP" emoji="🎲" />
+                                    <XPRow label={t('yahtzee')} xp="+50 XP" emoji="🎲" />
                                 </View>
 
                                 <View style={[styles.infoBox, { borderColor: theme.accent }]}>

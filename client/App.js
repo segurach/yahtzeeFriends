@@ -400,9 +400,33 @@ export default function App() {
       'confirm',
       () => {
         // Sound will be played via turn_updated event for the scoring player
+
+        // Check for Yahtzee Animation
         if (category === 'yahtzee' && potentialScore === 50) {
           if (confettiRef.current) confettiRef.current.start();
         }
+
+        // Check for Bonus Animation (Upper Section >= 63)
+        const UPPER_SECTION = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'];
+        if (UPPER_SECTION.includes(category)) {
+          const myPlayer = players.find(p => p.id === myId);
+          const myScorecard = myPlayer?.scorecard || {};
+
+          let currentUpperSum = 0;
+          UPPER_SECTION.forEach(cat => {
+            if (myScorecard[cat] !== undefined) currentUpperSum += myScorecard[cat];
+          });
+
+          // If we weren't at 63 yet, and this move puts us over
+          if (currentUpperSum < 63 && (currentUpperSum + potentialScore) >= 63) {
+            if (confettiRef.current) confettiRef.current.start();
+            // Optional: Show a "Bonus Unlocked" modal after a slight delay
+            setTimeout(() => {
+              showModal("BONUS! 🌟", "+35 Points!", 'success');
+            }, 500);
+          }
+        }
+
         socket.emit('submit_score', { roomCode: currentRoom, category });
       },
       () => { }, // On cancel do nothing

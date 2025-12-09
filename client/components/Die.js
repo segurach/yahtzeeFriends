@@ -107,13 +107,13 @@ const styles = StyleSheet.create({
     dotWhite: { position: 'absolute', width: 10, height: 10, borderRadius: 5, backgroundColor: 'white' },
 
     // Dot Positions (reused for both colors)
-    dotCenter: { top: 23, left: 23 },
-    dotTL: { top: 7, left: 7 },
-    dotTR: { top: 7, right: 7 },
-    dotML: { top: 23, left: 7 },
-    dotMR: { top: 23, right: 7 },
-    dotBL: { bottom: 7, left: 7 },
-    dotBR: { bottom: 7, right: 7 },
+    dotCenter: { top: '50%', left: '50%', marginTop: -5, marginLeft: -5 },
+    dotTL: { top: '15%', left: '15%' },
+    dotTR: { top: '15%', right: '15%' },
+    dotML: { top: '50%', left: '15%', marginTop: -5 },
+    dotMR: { top: '50%', right: '15%', marginTop: -5 },
+    dotBL: { bottom: '15%', left: '15%' },
+    dotBR: { bottom: '15%', right: '15%' },
 });
 
 export default Die;

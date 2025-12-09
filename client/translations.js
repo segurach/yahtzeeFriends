@@ -76,6 +76,13 @@ export const translations = {
         large_straight: "Large Straight",
         chance: "Chance",
         yahtzee: "Five of a Kind",
+        // Scorecard
+        upperSection: "Upper Section",
+        lowerSection: "Lower Section",
+        subtotal: "Subtotal",
+        bonus: "Bonus (+35)",
+        upperTotal: "Upper Total",
+        lowerTotal: "Lower Total",
         // Player Guide
         playerGuide: "Player Guide",
         rules: "Rules",
@@ -181,6 +188,13 @@ export const translations = {
         large_straight: "Grande Suite",
         chance: "Chance",
         yahtzee: "Quinte",
+        // Scorecard
+        upperSection: "Section Haute",
+        lowerSection: "Section Basse",
+        subtotal: "Sous-total",
+        bonus: "Bonus (+35)",
+        upperTotal: "Total Haut",
+        lowerTotal: "Total Bas",
         // Player Guide
         playerGuide: "Guide du Joueur",
         rules: "Règles",

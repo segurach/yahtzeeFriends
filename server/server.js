@@ -186,7 +186,29 @@ io.on('connection', (socket) => {
             }
 
             currentPlayer.scorecard[category] = score;
-            currentPlayer.score += score;
+
+            // Recalculate total score with bonus
+            const upperSection = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'];
+            let upperSum = 0;
+            let totalScore = 0;
+
+            // Sum up all categories
+            for (const [key, value] of Object.entries(currentPlayer.scorecard)) {
+                totalScore += value;
+                if (upperSection.includes(key)) {
+                    upperSum += value;
+                }
+            }
+
+            // Apply Bonus if Upper Section >= 63
+            if (upperSum >= 63) {
+                totalScore += 35;
+                currentPlayer.bonus = true; // Flag for client to know bonus is active
+            } else {
+                currentPlayer.bonus = false;
+            }
+
+            currentPlayer.score = totalScore;
 
             // Check for Game Over
             // Game is over if ALL players have filled ALL 13 categories
