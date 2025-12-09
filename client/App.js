@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { StyleSheet, View, Alert, Animated, Easing, Dimensions } from 'react-native';
+import { StyleSheet, View, Animated, Easing, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import io from 'socket.io-client';
 import * as Haptics from 'expo-haptics';
@@ -14,6 +14,7 @@ SplashScreen.preventAutoHideAsync();
 import Lobby from './components/Lobby';
 import Game from './components/Game';
 import GameOver from './components/GameOver';
+import CustomModal from './components/CustomModal';
 
 // Logic & Utils
 import { translations } from './translations';
@@ -37,6 +38,37 @@ export default function App() {
   const [keptIndices, setKeptIndices] = useState([]);
   const keptIndicesRef = useRef([]); // Ref to access latest state in event listener
   const playerNameRef = useRef(''); // Ref to access latest player name in listener
+
+  // Modal State
+  const [modalConfig, setModalConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'info',
+    onConfirm: () => { },
+    onCancel: null,
+    confirmText: 'OK',
+    cancelText: 'Cancel'
+  });
+
+  const showModal = (title, message, type = 'info', onConfirm = () => { }, onCancel = null, confirmText = 'OK', cancelText = 'Cancel') => {
+    setModalConfig({
+      visible: true,
+      title,
+      message,
+      type,
+      onConfirm: () => {
+        setModalConfig(prev => ({ ...prev, visible: false }));
+        onConfirm();
+      },
+      onCancel: onCancel ? () => {
+        setModalConfig(prev => ({ ...prev, visible: false }));
+        onCancel();
+      } : null,
+      confirmText,
+      cancelText
+    });
+  };
 
   useEffect(() => {
     playerNameRef.current = playerName;
@@ -270,7 +302,7 @@ export default function App() {
           setLevel(prevLevel => {
             if (newLevel > prevLevel) {
               // Level Up! Could trigger a special animation sound here
-              Alert.alert("LEVEL UP! 🎉", `Congratulations! You reached Level ${newLevel}!`);
+              showModal("LEVEL UP! 🎉", `Congratulations! You reached Level ${newLevel}!`, 'success', () => { }, null, "Awesome!");
             }
             // Save to storage
             saveXP(newTotal, newLevel);
@@ -297,7 +329,7 @@ export default function App() {
     });
 
     newSocket.on('error', (msg) => {
-      Alert.alert(t('error'), msg);
+      showModal(t('error'), msg, 'error');
     });
 
     return () => newSocket.disconnect();
@@ -320,12 +352,12 @@ export default function App() {
   }, []);
 
   const createRoom = () => {
-    if (!playerName) return Alert.alert(t('error'), t('enterNameFirst'));
+    if (!playerName) return showModal(t('error'), t('enterNameFirst'), 'error');
     socket.emit('create_room', playerName);
   };
 
   const joinRoom = () => {
-    if (!playerName || !roomCode) return Alert.alert(t('error'), t('enterNameAndCode'));
+    if (!playerName || !roomCode) return showModal(t('error'), t('enterNameAndCode'), 'error');
     socket.emit('join_room', { roomCode, playerName });
     setCurrentRoom(roomCode);
   };
@@ -362,22 +394,20 @@ export default function App() {
   const submitScore = (category) => {
     const potentialScore = calculateScore(category, dice);
     const categoryName = t(category);
-    Alert.alert(
+    showModal(
       t('confirmScore'),
       t('scorePointsFor').replace('{score}', potentialScore).replace('{category}', categoryName),
-      [
-        { text: t('cancel'), style: "cancel" },
-        {
-          text: t('validate'),
-          onPress: () => {
-            // Sound will be played via turn_updated event for the scoring player
-            if (category === 'yahtzee' && potentialScore === 50) {
-              if (confettiRef.current) confettiRef.current.start();
-            }
-            socket.emit('submit_score', { roomCode: currentRoom, category });
-          }
+      'confirm',
+      () => {
+        // Sound will be played via turn_updated event for the scoring player
+        if (category === 'yahtzee' && potentialScore === 50) {
+          if (confettiRef.current) confettiRef.current.start();
         }
-      ]
+        socket.emit('submit_score', { roomCode: currentRoom, category });
+      },
+      () => { }, // On cancel do nothing
+      t('validate'),
+      t('cancel')
     );
   };
 
@@ -423,6 +453,7 @@ export default function App() {
           players={players}
           level={level}
           totalXP={totalXP}
+          showModal={showModal}
         />
       )}
 
@@ -442,6 +473,7 @@ export default function App() {
           submitScore={submitScore}
           resetGame={leaveGame}
           currentDiceSkin={currentDiceSkin}
+          showModal={showModal}
         />
       )}
 
@@ -456,6 +488,11 @@ export default function App() {
           xpGainedLastGame={xpGainedLastGame}
         />
       )}
+
+      <CustomModal
+        {...modalConfig}
+        theme={theme}
+      />
 
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, pointerEvents: 'none' }}>
         <ConfettiCannon

@@ -23,7 +23,8 @@ export default function Lobby({
     level = 1,
     totalXP = 0,
     currentDiceSkin,
-    setCurrentDiceSkin
+    setCurrentDiceSkin,
+    showModal
 }) {
     const themeNames = {
         darkBlue: 'themeDarkBlue',
@@ -241,7 +242,7 @@ export default function Lobby({
                                                 isLocked && styles.lockedTheme
                                             ]}
                                             onPress={() => {
-                                                if (isLocked) alert(t('locked').replace('{level}', 10));
+                                                if (isLocked) showModal(t('locked'), t('locked').replace('{level}', 10), 'error');
                                                 else setCurrentDiceSkin(skin);
                                             }}
                                         >
@@ -270,7 +271,7 @@ export default function Lobby({
                                                 isLocked && styles.lockedTheme
                                             ]}
                                             onPress={() => {
-                                                if (isLocked) alert(t('locked').replace('{level}', themeObj.requiredLevel));
+                                                if (isLocked) showModal(t('locked'), t('locked').replace('{level}', themeObj.requiredLevel), 'error');
                                                 else setCurrentTheme(themeKey);
                                             }}
                                         >

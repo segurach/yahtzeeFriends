@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Animated, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Die from './Die';
 import ScoreRow from './ScoreRow';
@@ -21,7 +21,8 @@ export default function Game({
     rollDice,
     submitScore,
     resetGame,
-    currentDiceSkin = 'standard'
+    currentDiceSkin = 'standard',
+    showModal
 }) {
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [scorecardVisible, setScorecardVisible] = useState(false);
@@ -47,17 +48,14 @@ export default function Game({
     };
 
     const handleQuitGame = () => {
-        Alert.alert(
+        showModal(
             t('quitGame'),
             t('quitGameConfirm'),
-            [
-                { text: t('cancel'), style: 'cancel' },
-                {
-                    text: t('quit'),
-                    style: 'destructive',
-                    onPress: resetGame
-                }
-            ]
+            'confirm',
+            resetGame,
+            () => { }, // Cancel
+            t('quit'),
+            t('cancel')
         );
     };
 
