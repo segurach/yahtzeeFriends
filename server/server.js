@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const { getBotMove } = require('./botLogic');
 
 const app = express();
 app.use(cors());
@@ -140,11 +141,116 @@ io.on('connection', (socket) => {
             // Update players with reset scores
             io.to(roomCode).emit('player_joined', room.players);
 
-            console.log(`Game started in room ${roomCode}`);
+            console.log(`Game started in room ${roomCode} `);
         }
     });
 
-    // Roll dice
+    // Create a Bot Game
+    socket.on('create_bot_game', (playerName) => {
+        const roomCode = generateRoomCode();
+        rooms.set(roomCode, {
+            players: [
+                { id: socket.id, name: playerName, score: 0 },
+                { id: `bot_${Date.now()} `, name: '🤖 Bot', score: 0, isBot: true }
+            ],
+            gameState: 'playing', // Start immediately
+            currentTurn: 0,
+            dice: [0, 0, 0, 0, 0],
+            rollsLeft: 3,
+            isBotGame: true
+        });
+        socket.join(roomCode);
+        socket.emit('room_created', roomCode);
+
+        const room = rooms.get(roomCode);
+        io.to(roomCode).emit('game_started', {
+            currentTurn: room.players[0].id,
+            dice: room.dice,
+            rollsLeft: room.rollsLeft
+        });
+        io.to(roomCode).emit('player_joined', room.players); // Send initial player list
+        console.log(`Bot Game started in room ${roomCode} `);
+    });
+
+    const playBotTurn = async (roomCode) => {
+        const room = rooms.get(roomCode);
+        if (!room || room.gameState !== 'playing') return;
+
+        const botPlayer = room.players[room.currentTurn];
+        if (!botPlayer.isBot) return;
+
+        // Artificial delay for "thinking"
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // Get decision
+        const move = getBotMove(room.dice, room.rollsLeft, botPlayer.scorecard || {});
+
+        if (move.action === 'roll') {
+            room.dice = generateRandomDice(room.dice, move.keptIndices);
+            room.rollsLeft--;
+
+            io.to(roomCode).emit('dice_updated', {
+                dice: room.dice,
+                rollsLeft: room.rollsLeft,
+                keptIndices: move.keptIndices
+            });
+
+            // Recurse if rolls left (wait and play again)
+            if (room.rollsLeft > 0) {
+                playBotTurn(roomCode);
+            } else {
+                // Force submit on next simulated step
+                playBotTurn(roomCode);
+            }
+        } else if (move.action === 'submit') {
+            // Execute submission logic (reused from submit_score but internal)
+            const category = move.category;
+            const score = calculateScore(category, room.dice);
+
+            if (!botPlayer.scorecard) botPlayer.scorecard = {};
+            botPlayer.scorecard[category] = score;
+
+            // Standard scoring update logic...
+            const upperSection = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'];
+            let upperSum = 0;
+            let totalScore = 0;
+            for (const [key, value] of Object.entries(botPlayer.scorecard)) {
+                totalScore += value;
+                if (upperSection.includes(key)) upperSum += value;
+            }
+            if (upperSum >= 63) {
+                totalScore += 35;
+                botPlayer.bonus = true;
+            }
+            botPlayer.score = totalScore;
+
+            // Check game over
+            const CATEGORIES_COUNT = 13;
+            const allPlayersFinished = room.players.every(p =>
+                p.scorecard && Object.keys(p.scorecard).length === CATEGORIES_COUNT
+            );
+
+            if (allPlayersFinished) {
+                room.gameState = 'finished';
+                const winner = room.players.reduce((prev, current) => (prev.score > current.score) ? prev : current);
+                // ... XP logic (Bot doesn't need XP but format expected) ...
+                const playersWithXp = room.players.map(p => ({ ...p, xpGained: 0, xpDetails: [] }));
+
+                io.to(roomCode).emit('game_over', { players: playersWithXp, winner });
+            } else {
+                room.currentTurn = (room.currentTurn + 1) % room.players.length;
+                room.dice = [0, 0, 0, 0, 0];
+                room.rollsLeft = 3;
+
+                io.to(roomCode).emit('turn_updated', {
+                    currentTurn: room.players[room.currentTurn].id,
+                    dice: room.dice,
+                    rollsLeft: room.rollsLeft,
+                    players: room.players
+                });
+            }
+        }
+    };
     socket.on('roll_dice', ({ roomCode, keptIndices }) => {
         const room = rooms.get(roomCode);
         if (room && room.gameState === 'playing' && room.rollsLeft > 0) {
@@ -267,6 +373,12 @@ io.on('connection', (socket) => {
                     rollsLeft: room.rollsLeft,
                     players: room.players // Send full player data to update scores
                 });
+
+                // Check if next player is Bot
+                const nextPlayer = room.players[room.currentTurn];
+                if (nextPlayer.isBot) {
+                    playBotTurn(roomCode);
+                }
             }
         }
     });
@@ -279,7 +391,7 @@ io.on('connection', (socket) => {
 
             if (leavingPlayerIndex !== -1) {
                 const leavingPlayer = room.players[leavingPlayerIndex];
-                console.log(`Player ${leavingPlayer.name} is leaving room ${roomCode}`);
+                console.log(`Player ${leavingPlayer.name} is leaving room ${roomCode} `);
 
                 // Remove player from room
                 room.players.splice(leavingPlayerIndex, 1);

@@ -14,6 +14,7 @@ export const translations = {
         error: "Error",
         enterNameFirst: "Enter name first",
         enterNameAndCode: "Enter name and code",
+        playVsBot: "Play vs Bot 🤖",
 
         // Game
         itsYourTurn: "It's YOUR turn!",
@@ -136,6 +137,7 @@ export const translations = {
         error: "Erreur",
         enterNameFirst: "Entrez un pseudo d'abord",
         enterNameAndCode: "Entrez un pseudo et un code",
+        playVsBot: "Jouer contre l'ORDI 🤖",
 
         // Game
         itsYourTurn: "C'est à TOI !",

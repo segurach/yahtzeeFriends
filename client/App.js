@@ -262,9 +262,15 @@ export default function App() {
       keptIndicesRef.current = [];
     });
 
-    newSocket.on('dice_updated', ({ dice, rollsLeft }) => {
+    newSocket.on('dice_updated', ({ dice, rollsLeft, keptIndices }) => {
       setDice(dice);
       setRollsLeft(rollsLeft);
+
+      // If it's not my turn (e.g. Bot playing), update visually what they kept
+      if (currentTurnIdRef.current !== newSocket.id && keptIndices) {
+        setKeptIndices(keptIndices);
+        keptIndicesRef.current = keptIndices;
+      }
 
       // Play sound only if it's my turn (using ref to get latest value)
       if (currentTurnIdRef.current === newSocket.id) {
@@ -359,6 +365,13 @@ export default function App() {
   const createRoom = () => {
     if (!playerName) return showModal(t('error'), t('enterNameFirst'), 'error');
     socket.emit('create_room', playerName);
+  };
+
+
+
+  const createBotGame = () => {
+    if (!playerName) return showModal(t('error'), t('enterNameFirst'), 'error');
+    socket.emit('create_bot_game', playerName);
   };
 
   const joinRoom = () => {
@@ -499,13 +512,16 @@ export default function App() {
           setCurrentDiceSkin={saveSkin}
           theme={theme}
           t={t}
+          theme={theme}
+          t={t}
           isConnected={isConnected}
-          currentRoom={currentRoom}
           playerName={playerName}
           setPlayerName={setPlayerName}
           roomCode={roomCode}
           setRoomCode={setRoomCode}
+          currentRoom={currentRoom}
           createRoom={createRoom}
+          createBotGame={createBotGame}
           joinRoom={joinRoom}
           startGame={startGame}
           players={players}

@@ -19,6 +19,7 @@ export default function Lobby({
     roomCode,
     setRoomCode,
     createRoom,
+    createBotGame,
     joinRoom,
     startGame,
     players,
@@ -148,6 +149,17 @@ export default function Lobby({
                             accessibilityHint="Creates a new game room"
                         >
                             <Text style={[styles.buttonText, { color: getButtonTextColor(theme.accent) }]}>{t('createRoom')}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.primaryButton, { backgroundColor: '#795548', marginTop: 10 }]}
+                            onPress={createBotGame}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('playVsBot') || "Play vs Bot"}
+                            accessibilityHint="Starts a game against the computer"
+                        >
+                            <Text style={[styles.buttonText, { color: '#fff' }]}>{t('playVsBot') || "Play vs Bot 🤖"}</Text>
                         </TouchableOpacity>
 
                         <View style={styles.separator} />
