@@ -172,7 +172,7 @@ io.on('connection', (socket) => {
         console.log(`Bot Game started in room ${roomCode} `);
     });
 
-    const playBotTurn = async (roomCode) => {
+    const playBotTurn = async (roomCode, delayMs = 1500) => {
         const room = rooms.get(roomCode);
         if (!room || room.gameState !== 'playing') return;
 
@@ -180,7 +180,8 @@ io.on('connection', (socket) => {
         if (!botPlayer.isBot) return;
 
         // Artificial delay for "thinking"
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // If a special animation just played (passed via delayMs), wait longer
+        await new Promise(resolve => setTimeout(resolve, delayMs));
 
         // Get decision
         const move = getBotMove(room.dice, room.rollsLeft, botPlayer.scorecard || {});
@@ -377,7 +378,21 @@ io.on('connection', (socket) => {
                 // Check if next player is Bot
                 const nextPlayer = room.players[room.currentTurn];
                 if (nextPlayer.isBot) {
-                    playBotTurn(roomCode);
+                    let delayMs = 1500; // Standard delay
+
+                    // If player got a special score, increase delay to let animation finish
+                    if (score === 50 && category === 'yahtzee') delayMs = 4000; // Yahtzee celebration
+                    else if (category.includes('straight')) delayMs = 3000; // Straights animation
+                    else if (category === 'full_house' || category === 'four_of_a_kind') delayMs = 2500;
+
+                    // Also check for Upper Section Bonus (35 pts)
+                    // If the player just crossed 63, they get an animation
+                    if (currentPlayer.bonus && !currentPlayer.bonus_already_claimed) {
+                        delayMs = 4000; // Bonus animation is long
+                        currentPlayer.bonus_already_claimed = true;
+                    }
+
+                    playBotTurn(roomCode, delayMs);
                 }
             }
         }

@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import AdModal from './AdModal';
 
-export default function GameOver({ t, players, resetGame, playAgain, currentTheme, myId, onDoubleXP }) {
+export default function GameOver({ t, players, leaveGame, playAgain, currentTheme, myId, onDoubleXP, setShowSettings }) {
     const sortedPlayers = players.sort((a, b) => b.score - a.score);
     const [showAd, setShowAd] = useState(false);
     const [xpDoubled, setXpDoubled] = useState(false);
@@ -81,7 +81,7 @@ export default function GameOver({ t, players, resetGame, playAgain, currentThem
             </TouchableOpacity>
             <TouchableOpacity
                 style={styles.primaryButton}
-                onPress={resetGame}
+                onPress={leaveGame}
                 accessible={true}
                 accessibilityRole="button"
                 accessibilityLabel={t('backToLobby')}
