@@ -13,8 +13,12 @@ export const translations = {
         startGame: "Start Game",
         error: "Error",
         enterNameFirst: "Enter name first",
-        enterNameAndCode: "Enter name and code",
+        waitingForPlayersMessage: "You can't play alone! Wait for another player to join.",
+        leaveRoom: "Leave Room",
         playVsBot: "Play vs Bot 🤖",
+        music: "Background Music",
+        musicOn: "ON 🎵",
+        musicOff: "OFF 🔇",
 
         // Game
         itsYourTurn: "It's YOUR turn!",
@@ -141,6 +145,9 @@ export const translations = {
         waitingForPlayersMessage: "Vous ne pouvez pas lancer une partie tout seul ! Attendez qu'un autre joueur rejoigne la salle.",
         leaveRoom: "Quitter la Salle",
         playVsBot: "Jouer contre l'ORDI 🤖",
+        music: "Musique d'ambiance",
+        musicOn: "Activée 🎵",
+        musicOff: "Désactivée 🔇",
 
         // Game
         itsYourTurn: "C'est à TOI !",

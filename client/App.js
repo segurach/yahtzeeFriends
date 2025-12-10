@@ -99,7 +99,10 @@ export default function App() {
   // Rewards State
   const [currentDiceSkin, setCurrentDiceSkin] = useState('standard'); // standard, golden
 
-  // Load saved data (Theme, Language, XP, Skin)
+  const [isMusicEnabled, setIsMusicEnabled] = useState(false);
+  const musicRef = useRef(null);
+
+  // Load saved data (Theme, Language, XP, Skin, Music)
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -112,10 +115,12 @@ export default function App() {
         const savedXP = await AsyncStorage.getItem('totalXP');
         const savedLevel = await AsyncStorage.getItem('level');
         const savedSkin = await AsyncStorage.getItem('diceSkin');
+        const savedMusic = await AsyncStorage.getItem('musicEnabled');
 
         if (savedXP) setTotalXP(parseInt(savedXP));
         if (savedLevel) setLevel(parseInt(savedLevel));
         if (savedSkin) setCurrentDiceSkin(savedSkin);
+        if (savedMusic !== null) setIsMusicEnabled(JSON.parse(savedMusic));
       } catch (e) {
         console.error('Failed to load data', e);
       } finally {
@@ -124,6 +129,71 @@ export default function App() {
     };
     loadData();
   }, []);
+
+  // Background Music Logic
+  useEffect(() => {
+    // Determine what to do based on state
+    const updateMusicState = async () => {
+      try {
+        if (isMusicEnabled) {
+          // USER WANTS MUSIC
+          if (!musicRef.current) {
+            // Not loaded? Load and play
+            const { sound } = await Audio.Sound.createAsync(
+              require('./assets/background.mp3'),
+              { isLooping: true, volume: 0.3 }
+            );
+            musicRef.current = sound;
+            await sound.playAsync();
+          } else {
+            // Loaded? Ensure playing
+            const status = await musicRef.current.getStatusAsync();
+            if (status.isLoaded && !status.isPlaying) {
+              await musicRef.current.playAsync();
+            } else if (!status.isLoaded) {
+              // Reload if somehow unloaded but ref exists
+              const { sound } = await Audio.Sound.createAsync(
+                require('./assets/background.mp3'),
+                { isLooping: true, volume: 0.3 }
+              );
+              musicRef.current = sound;
+              await sound.playAsync();
+            }
+          }
+        } else {
+          // USER WANTS SILENCE
+          if (musicRef.current) {
+            const status = await musicRef.current.getStatusAsync();
+            if (status.isLoaded) {
+              await musicRef.current.stopAsync();
+              await musicRef.current.unloadAsync();
+            }
+            musicRef.current = null;
+          }
+        }
+      } catch (error) {
+        console.log("Error managing music:", error);
+      }
+    };
+
+    updateMusicState();
+  }, [isMusicEnabled]);
+
+  // Cleanup on unmount only
+  useEffect(() => {
+    return () => {
+      if (musicRef.current) {
+        musicRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  // Save music preference
+  const toggleMusic = async () => {
+    const newValue = !isMusicEnabled;
+    setIsMusicEnabled(newValue);
+    await AsyncStorage.setItem('musicEnabled', JSON.stringify(newValue));
+  };
 
   const saveXP = async (newXP, newLevel) => {
     try {
@@ -521,8 +591,8 @@ export default function App() {
           setCurrentDiceSkin={saveSkin}
           theme={theme}
           t={t}
-          theme={theme}
-          t={t}
+          isMusicEnabled={isMusicEnabled}
+          toggleMusic={toggleMusic}
           isConnected={isConnected}
           playerName={playerName}
           setPlayerName={setPlayerName}

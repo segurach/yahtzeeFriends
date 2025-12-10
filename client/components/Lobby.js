@@ -12,6 +12,8 @@ export default function Lobby({
     setCurrentTheme,
     theme,
     t,
+    isMusicEnabled,
+    toggleMusic,
     isConnected,
     currentRoom,
     playerName,
@@ -271,6 +273,19 @@ export default function Lobby({
                                 onPress={() => setLanguage(l => l === 'fr' ? 'en' : 'fr')}
                             >
                                 <Text style={styles.langButtonText}>{language === 'fr' ? '🇬🇧 English' : '🇫🇷 Français'}</Text>
+                            </TouchableOpacity>
+
+                            <View style={styles.separator} />
+
+                            {/* Music */}
+                            <Text style={styles.sectionLabel}>{t('music') || "Music"}:</Text>
+                            <TouchableOpacity
+                                style={[styles.modalLangButton, { backgroundColor: isMusicEnabled ? theme.accent : theme.secondary }]}
+                                onPress={toggleMusic}
+                            >
+                                <Text style={[styles.langButtonText, { color: isMusicEnabled ? getButtonTextColor(theme.accent) : getButtonTextColor(theme.secondary) }]}>
+                                    {isMusicEnabled ? (t('musicOn') || "ON") : (t('musicOff') || "OFF")}
+                                </Text>
                             </TouchableOpacity>
 
                             <View style={styles.separator} />
