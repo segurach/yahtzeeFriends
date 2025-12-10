@@ -16,7 +16,7 @@ export const translations = {
         waitingForPlayersMessage: "You can't play alone! Wait for another player to join.",
         leaveRoom: "Leave Room",
         playVsBot: "Play vs Bot 🤖",
-        music: "Background Music",
+        music: "Music",
         musicOn: "ON 🎵",
         musicOff: "OFF 🔇",
 
@@ -145,7 +145,7 @@ export const translations = {
         waitingForPlayersMessage: "Vous ne pouvez pas lancer une partie tout seul ! Attendez qu'un autre joueur rejoigne la salle.",
         leaveRoom: "Quitter la Salle",
         playVsBot: "Jouer contre l'ORDI 🤖",
-        music: "Musique d'ambiance",
+        music: "Musique",
         musicOn: "Activée 🎵",
         musicOff: "Désactivée 🔇",
 

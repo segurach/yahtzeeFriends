@@ -22,7 +22,8 @@ export default function Game({
     submitScore,
     resetGame,
     currentDiceSkin = 'standard',
-    showModal
+    showModal,
+    setShowSettings
 }) {
     const [selectedPlayer, setSelectedPlayer] = useState(null);
     const [scorecardVisible, setScorecardVisible] = useState(false);
@@ -62,6 +63,17 @@ export default function Game({
     return (
         <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.headerContainer}>
+                <TouchableOpacity
+                    style={styles.settingsButton}
+                    onPress={() => setShowSettings(true)}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('settings') || "Settings"}
+                    accessibilityHint="Opens customization menu"
+                >
+                    <Ionicons name="settings-outline" size={28} color="#fff" />
+                </TouchableOpacity>
+
                 <Text
                     style={styles.title}
                     accessible={true}
@@ -215,6 +227,11 @@ const styles = StyleSheet.create({
     headerButton: {
         position: 'absolute',
         right: 20,
+        top: 10,
+    },
+    settingsButton: {
+        position: 'absolute',
+        left: 20,
         top: 10,
     },
     subtitle: {

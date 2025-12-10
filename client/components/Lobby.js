@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { themes, themeKeys } from '../utils/themes';
+import { themes, themeKeys, getButtonTextColor } from '../utils/themes';
 import PlayerGuide from './PlayerGuide';
 import AdModal from './AdModal';
 
@@ -30,7 +30,8 @@ export default function Lobby({
     totalXP = 0,
     currentDiceSkin,
     setCurrentDiceSkin,
-    showModal
+    showModal,
+    setShowSettings // New prop
 }) {
     const themeNames = {
         darkBlue: 'themeDarkBlue',
@@ -54,23 +55,6 @@ export default function Lobby({
         return t('titleNovice');
     };
 
-    // Dynamic button text color based on theme
-    // Use black text for high contrast and bright accent colors
-    const getButtonTextColor = (bgColor) => {
-        // High contrast always uses black
-        if (currentTheme === 'highContrast') return '#000000';
-
-        // For bright/yellow colors, use black text
-        const brightColors = ['#FFFF00', '#ffeb3b', '#ffd54f', '#ffa726', '#ffcc80'];
-        if (brightColors.includes(bgColor)) return '#000000';
-
-        // Default: white text
-        return '#FFFFFF';
-        // Default: white text
-        return '#FFFFFF';
-    };
-
-    const [showSettings, setShowSettings] = useState(false);
     const [showGuide, setShowGuide] = useState(false);
     const [showAd, setShowAd] = useState(false);
 
@@ -250,105 +234,7 @@ export default function Lobby({
                     </View>
                 )
             }
-            <Modal
-                visible={showSettings}
-                animationType="fade"
-                transparent={true}
-                onRequestClose={() => setShowSettings(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.primary }]}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>{t('settings') || "Settings"}</Text>
-                            <TouchableOpacity onPress={() => setShowSettings(false)}>
-                                <Ionicons name="close" size={28} color="#fff" />
-                            </TouchableOpacity>
-                        </View>
 
-                        <ScrollView contentContainerStyle={styles.modalBody}>
-                            {/* Language */}
-                            <Text style={styles.sectionLabel}>{t('language') || "Language"}:</Text>
-                            <TouchableOpacity
-                                style={styles.modalLangButton}
-                                onPress={() => setLanguage(l => l === 'fr' ? 'en' : 'fr')}
-                            >
-                                <Text style={styles.langButtonText}>{language === 'fr' ? '🇬🇧 English' : '🇫🇷 Français'}</Text>
-                            </TouchableOpacity>
-
-                            <View style={styles.separator} />
-
-                            {/* Music */}
-                            <Text style={styles.sectionLabel}>{t('music') || "Music"}:</Text>
-                            <TouchableOpacity
-                                style={[styles.modalLangButton, { backgroundColor: isMusicEnabled ? theme.accent : theme.secondary }]}
-                                onPress={toggleMusic}
-                            >
-                                <Text style={[styles.langButtonText, { color: isMusicEnabled ? getButtonTextColor(theme.accent) : getButtonTextColor(theme.secondary) }]}>
-                                    {isMusicEnabled ? (t('musicOn') || "ON") : (t('musicOff') || "OFF")}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <View style={styles.separator} />
-
-                            {/* Dice Skins */}
-                            <Text style={styles.sectionLabel}>{t('diceStyle')}:</Text>
-                            <View style={styles.modalSkinRow}>
-                                {['standard', 'golden'].map((skin) => {
-                                    const isLocked = skin === 'golden' && level < 10;
-                                    const skinColor = skin === 'golden' ? '#ffd700' : '#ffffff';
-                                    return (
-                                        <TouchableOpacity
-                                            key={skin}
-                                            style={[
-                                                styles.themeCircle,
-                                                { backgroundColor: skinColor },
-                                                currentDiceSkin === skin && styles.selectedTheme,
-                                                isLocked && styles.lockedTheme
-                                            ]}
-                                            onPress={() => {
-                                                if (isLocked) showModal(t('locked'), t('locked').replace('{level}', 10), 'error');
-                                                else setCurrentDiceSkin(skin);
-                                            }}
-                                        >
-                                            {currentDiceSkin === skin && !isLocked && <Text style={[styles.checkmark, { color: skin === 'standard' ? '#000' : '#fff' }]}>✓</Text>}
-                                            {isLocked && <Text style={styles.lockIcon}>🔒</Text>}
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-
-                            <View style={styles.separator} />
-
-                            {/* Themes */}
-                            <Text style={styles.sectionLabel}>{t('theme') || "Theme"}:</Text>
-                            <View style={styles.modalThemeGrid}>
-                                {themeKeys.map((themeKey) => {
-                                    const themeObj = themes[themeKey];
-                                    const isLocked = (themeObj.requiredLevel || 1) > level;
-                                    return (
-                                        <TouchableOpacity
-                                            key={themeKey}
-                                            style={[
-                                                styles.themeCircle,
-                                                { backgroundColor: themeObj.primary, marginBottom: 10 },
-                                                currentTheme === themeKey && styles.selectedTheme,
-                                                isLocked && styles.lockedTheme
-                                            ]}
-                                            onPress={() => {
-                                                if (isLocked) showModal(t('locked'), t('locked').replace('{level}', themeObj.requiredLevel), 'error');
-                                                else setCurrentTheme(themeKey);
-                                            }}
-                                        >
-                                            {currentTheme === themeKey && !isLocked && <Text style={styles.checkmark}>✓</Text>}
-                                            {isLocked && <Text style={styles.lockIcon}>🔒</Text>}
-                                        </TouchableOpacity>
-                                    );
-                                })}
-                            </View>
-                        </ScrollView>
-                    </View>
-                </View>
-            </Modal>
 
             <PlayerGuide
                 visible={showGuide}
@@ -507,78 +393,5 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.7)',
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    modalContent: {
-        width: '90%',
-        maxHeight: '80%',
-        borderRadius: 20,
-        padding: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    modalTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
-    },
-    sectionLabel: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 10,
-        marginTop: 10,
-    },
-    modalLangButton: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    modalSkinRow: {
-        flexDirection: 'row',
-        gap: 15,
-        marginBottom: 10,
-    },
-    modalThemeGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 15,
-        justifyContent: 'center',
-    },
-    themeCircle: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        borderWidth: 2,
-        borderColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    selectedTheme: {
-        borderColor: '#00ff00',
-        borderWidth: 3,
-        transform: [{ scale: 1.1 }],
-    },
-    lockedTheme: {
-        opacity: 0.5,
-    },
-    checkmark: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 20,
-    },
-    lockIcon: {
-        fontSize: 20,
-    },
-    langButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
     },
 });

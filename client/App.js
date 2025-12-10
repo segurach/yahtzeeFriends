@@ -15,6 +15,8 @@ import Lobby from './components/Lobby';
 import Game from './components/Game';
 import GameOver from './components/GameOver';
 import CustomModal from './components/CustomModal';
+import SettingsModal from './components/SettingsModal';
+import { getButtonTextColor } from './utils/themes';
 
 // Logic & Utils
 import { translations } from './translations';
@@ -69,6 +71,8 @@ export default function App() {
       cancelText
     });
   };
+
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     playerNameRef.current = playerName;
@@ -608,6 +612,7 @@ export default function App() {
           level={level}
           totalXP={totalXP}
           showModal={showModal}
+          setShowSettings={setShowSettings}
         />
       )}
 
@@ -628,6 +633,8 @@ export default function App() {
           resetGame={leaveGame}
           currentDiceSkin={currentDiceSkin}
           showModal={showModal}
+          theme={theme}
+          setShowSettings={setShowSettings}
         />
       )}
 
@@ -635,18 +642,39 @@ export default function App() {
         <GameOver
           t={t}
           players={players}
-          resetGame={resetGame}
           playAgain={playAgain}
-          currentTheme={currentTheme}
+          leaveGame={leaveGame}
           myId={myId}
+          theme={theme}
+          currentLevelXP={totalXP % 1000} // Recalculate for simple display
           xpGainedLastGame={xpGainedLastGame}
+          level={level}
           onDoubleXP={handleDoubleXP}
+          setShowSettings={setShowSettings}
         />
       )}
 
       <CustomModal
         {...modalConfig}
         theme={theme}
+      />
+
+      <SettingsModal
+        visible={showSettings}
+        onClose={() => setShowSettings(false)}
+        theme={theme}
+        language={language}
+        setLanguage={setLanguage}
+        isMusicEnabled={isMusicEnabled}
+        toggleMusic={toggleMusic}
+        currentDiceSkin={currentDiceSkin}
+        setCurrentDiceSkin={saveSkin}
+        currentTheme={currentTheme}
+        setCurrentTheme={setCurrentTheme}
+        level={level}
+        t={t}
+        showModal={showModal}
+        getButtonTextColor={getButtonTextColor}
       />
 
       <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000, pointerEvents: 'none' }}>

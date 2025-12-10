@@ -52,3 +52,16 @@ themes.forestGreen.requiredLevel = 1;
 themes.sunsetOrange.requiredLevel = 1;
 
 export const themeKeys = Object.keys(themes);
+
+// Helper to determine text color (black/white) based on background color
+export const getButtonTextColor = (bgColor, currentTheme) => {
+    // High contrast always uses black
+    if (currentTheme === 'highContrast') return '#000000';
+
+    // For bright/yellow colors, use black text
+    const brightColors = ['#FFFF00', '#ffeb3b', '#ffd54f', '#ffa726', '#ffcc80'];
+    if (brightColors.includes(bgColor)) return '#000000';
+
+    // Default: white text
+    return '#FFFFFF';
+};
